@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Campanha Coração Azul</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      text-align: center;
+      background: #f9f9f9;
+      padding: 2em;
+    }
+    canvas {
+      border: 1px solid #ccc;
+      margin-top: 1em;
+      max-width: 100%;
+      height: auto;
+    }
+    input, button {
+      margin: 1em;
+      font-family: 'Roboto', sans-serif;
+      padding: 0.5em 1em;
+      font-size: 1rem;
+    }
+    p {
+      max-width: 600px;
+      margin: 0 auto 2em auto;
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Campanha Coração Azul 💙</h2>
+  <p>
+    Junte-se à luta contra o tráfico de pessoas ao fazer parte da Campanha do Coração Azul.
+    Faça upload da sua fotografia de perfil para adicionar o filtro "Coração Azul" à mesma.
+    Depois, basta fazer download e divulgar nas suas redes sociais.
+    Juntos, podemos acabar com o Tráfico de Pessoas 💙
+  </p>
+
+  <input type="file" accept="image/*" id="upload">
+  <br>
+  <canvas id="canvas" width="1080" height="1080"></canvas>
+  <br>
+  <button id="download" style="display:none;">Baixar imagem com filtro</button>
+
+  <script>
+    const upload = document.getElementById("upload");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const downloadBtn = document.getElementById("download");
+
+    const overlay = new Image();
+    overlay.src = "logo.png"; // Your full-frame overlay, sized 1080x1080
+
+    upload.addEventListener("change", function () {
+      const file = this.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const userImg = new Image();
+        userImg.onload = function () {
+          // Clear canvas and set size
+          const size = 1080;
+          canvas.width = canvas.height = size;
+          ctx.clearRect(0, 0, size, size);
+
+          // Crop image to square from center
+          const minSide = Math.min(userImg.width, userImg.height);
+          const cropX = (userImg.width - minSide) / 2;
+          const cropY = (userImg.height - minSide) / 2;
+
+          // Draw user's image resized to 1080x1080
+          ctx.drawImage(
+            userImg,
+            cropX, cropY, minSide, minSide,
+            0, 0, size, size
+          );
+
+          // Draw the full overlay on top
+          overlay.onload = () => {
+            ctx.drawImage(overlay, 0, 0, size, size);
+            downloadBtn.style.display = "inline-block";
+          };
+
+          // If overlay is already cached
+          if (overlay.complete) {
+            ctx.drawImage(overlay, 0, 0, size, size);
+            downloadBtn.style.display = "inline-block";
+          }
+        };
+        userImg.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    downloadBtn.addEventListener("click", function () {
+      const link = document.createElement("a");
+      link.download = "coracao-azul.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    });
+  </script>
+
+</body>
+</html>
