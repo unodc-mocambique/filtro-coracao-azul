@@ -22,6 +22,7 @@
       font-family: 'Roboto', sans-serif;
       padding: 0.5em 1em;
       font-size: 1rem;
+      cursor: pointer;
     }
     p {
       max-width: 600px;
@@ -42,9 +43,9 @@
 
   <input type="file" accept="image/*" id="upload">
   <br>
-  <canvas id="canvas" width="1080" height="1080"></canvas>
+  <canvas id="canvas" width="1080" height="1080" style="display:none;"></canvas>
   <br>
-  <button id="download" style="display:none;">Baixar imagem com filtro</button>
+  <button id="download" style="display:none;">📥 Guardar imagem com filtro</button>
 
   <script>
     const upload = document.getElementById("upload");
@@ -53,7 +54,7 @@
     const downloadBtn = document.getElementById("download");
 
     const overlay = new Image();
-    overlay.src = "Logo.png"; // Your full-frame overlay, sized 1080x1080
+    overlay.src = "logo.png"; // Your full-size 1080x1080 PNG overlay
 
     upload.addEventListener("change", function () {
       const file = this.files[0];
@@ -63,33 +64,33 @@
       reader.onload = function (e) {
         const userImg = new Image();
         userImg.onload = function () {
-          // Clear canvas and set size
           const size = 1080;
           canvas.width = canvas.height = size;
           ctx.clearRect(0, 0, size, size);
 
-          // Crop image to square from center
+          // Crop uploaded image to square
           const minSide = Math.min(userImg.width, userImg.height);
           const cropX = (userImg.width - minSide) / 2;
           const cropY = (userImg.height - minSide) / 2;
 
-          // Draw user's image resized to 1080x1080
+          // Draw cropped & resized image
           ctx.drawImage(
             userImg,
             cropX, cropY, minSide, minSide,
             0, 0, size, size
           );
 
-          // Draw the full overlay on top
-          overlay.onload = () => {
-            ctx.drawImage(overlay, 0, 0, size, size);
-            downloadBtn.style.display = "inline-block";
-          };
-
-          // If overlay is already cached
+          // Draw overlay
           if (overlay.complete) {
             ctx.drawImage(overlay, 0, 0, size, size);
+            canvas.style.display = "block";
             downloadBtn.style.display = "inline-block";
+          } else {
+            overlay.onload = () => {
+              ctx.drawImage(overlay, 0, 0, size, size);
+              canvas.style.display = "block";
+              downloadBtn.style.display = "inline-block";
+            };
           }
         };
         userImg.src = e.target.result;
@@ -98,10 +99,22 @@
     });
 
     downloadBtn.addEventListener("click", function () {
+      const imageDataURL = canvas.toDataURL("image/png");
+
+      // Open in new tab (mobile users can long-press to save)
+      const newTab = window.open();
+      newTab.document.write('<img src="' + imageDataURL + '" style="width:100%">');
+
+      // Also trigger download (desktop)
       const link = document.createElement("a");
       link.download = "coracao-azul.png";
-      link.href = canvas.toDataURL("image/png");
+      link.href = imageDataURL;
       link.click();
+
+      // Alert for users
+      setTimeout(() => {
+        alert("Imagem criada! No telemóvel, pressione a imagem aberta e selecione 'Guardar na Galeria'.");
+      }, 300);
     });
   </script>
 
